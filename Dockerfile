@@ -5,16 +5,40 @@
 # - Ports exposes: 8080
 # - Health check path: /up
 # - Persistent storage: /app/storage and /app/database
-# - Set APP_KEY, APP_URL, APP_ENV=production, APP_DEBUG=false in Coolify env
+# - Mark APP_KEY as Runtime only
+# - Set APP_URL, APP_ENV=production, APP_DEBUG=false at runtime
+
+FROM composer:2 AS vendor
+
+WORKDIR /app
+
+ENV APP_ENV=local \
+    COMPOSER_ALLOW_SUPERUSER=1
+
+COPY composer.json composer.lock ./
+RUN composer install \
+        --no-dev \
+        --prefer-dist \
+        --no-interaction \
+        --no-scripts \
+        --no-autoloader
+
+COPY . .
+RUN composer dump-autoload --optimize --classmap-authoritative --no-dev --no-scripts
+
 
 FROM node:22-alpine AS assets
 
 WORKDIR /app
 
+ENV APP_ENV=local \
+    NODE_ENV=development
+
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
 
 COPY . .
+COPY --from=vendor /app/vendor ./vendor
 RUN npm run build
 
 
@@ -37,33 +61,21 @@ RUN apk add --no-cache curl \
         pdo_pgsql \
         opcache
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
 WORKDIR /app
 
-COPY composer.json composer.lock ./
-RUN composer install \
-        --no-dev \
-        --prefer-dist \
-        --no-interaction \
-        --no-scripts \
-        --no-autoloader
-
 COPY . /app
+COPY --from=vendor /app/vendor /app/vendor
 COPY --from=assets /app/public/build /app/public/build
 
-RUN composer dump-autoload --optimize --classmap-authoritative --no-dev \
-    && php artisan package:discover --ansi \
-    && rm -rf /root/.composer /tmp/*
+RUN php artisan package:discover --ansi \
+    && rm -rf /tmp/*
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh \
     && chmod +x /usr/local/bin/entrypoint.sh
 
 ENV SERVER_NAME=:8080 \
-    CADDY_GLOBAL_OPTIONS="auto_https off" \
-    APP_ENV=production \
-    APP_DEBUG=false
+    CADDY_GLOBAL_OPTIONS="auto_https off"
 
 EXPOSE 8080
 
