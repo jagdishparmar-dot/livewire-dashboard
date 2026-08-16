@@ -1,0 +1,104 @@
+@import 'tailwindcss';
+@import '../../vendor/livewire/flux/dist/flux.css';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../../app/Livewire/**/*.php';
+@source '../views/**/*.blade.php';
+@source '../../vendor/livewire/flux/stubs/**/*.blade.php';
+@source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: Inter, sans-serif;
+
+    --color-zinc-50: #fafafa;
+    --color-zinc-100: #f5f5f5;
+    --color-zinc-200: #e5e5e5;
+    --color-zinc-300: #d4d4d4;
+    --color-zinc-400: #a3a3a3;
+    --color-zinc-500: #737373;
+    --color-zinc-600: #525252;
+    --color-zinc-700: #404040;
+    --color-zinc-800: #262626;
+    --color-zinc-900: #171717;
+    --color-zinc-950: #0a0a0a;
+
+    --color-accent: var(--color-zinc-800);
+    --color-accent-content: var(--color-zinc-800);
+    --color-accent-foreground: var(--color-white);
+
+    --color-brand: #3ecf8e;
+}
+
+@layer base {
+    html {
+        color-scheme: light;
+    }
+
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+[data-flux-field]:not(ui-radio, ui-checkbox) {
+    @apply grid gap-2;
+}
+
+[data-flux-label] {
+    @apply !mb-0 !leading-tight;
+}
+
+input:focus[data-flux-control],
+textarea:focus[data-flux-control],
+select:focus[data-flux-control] {
+    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+@keyframes feed-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes bar-fill {
+    from {
+        width: 0;
+    }
+}
+
+.feed-item {
+    animation: feed-in 0.35s ease-out;
+}
+
+.channel-bar {
+    animation: bar-fill 0.7s ease-out;
+}
+
+.live-dot {
+    box-shadow: 0 0 0 0 rgb(62 207 142 / 0.7);
+    animation: live-pulse 1.8s ease-out infinite;
+}
+
+@keyframes live-pulse {
+    70% {
+        box-shadow: 0 0 0 6px rgb(62 207 142 / 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgb(62 207 142 / 0);
+    }
+}
